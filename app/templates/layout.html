@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang='en' class='h-full'>
+<head>
+	<meta charset='utf-8'>
+	<meta name='viewport' content='width=device-width, initial-scale=1'>
+	<title>{% block title %}BlogForge{% endblock %}</title>
+	<link rel='stylesheet' href='{{ url_for('static', filename='css/tailwind.css') }}'>
+	<script>
+		// Persisted dark mode
+		(function() {
+			try {
+				const isDark = localStorage.getItem('theme') === 'dark';
+				if (isDark) document.documentElement.classList.add('dark');
+			} catch (e) {}
+		})();
+	</script>
+</head>
+<body class='h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100'>
+	<div class='min-h-full'>
+		<!-- Top Navbar -->
+		<header class='sticky top-0 z-40 border-b border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/70 backdrop-blur'>
+			<div class='max-w-7xl mx-auto px-4 py-3 flex items-center justify-between'>
+				<div class='flex items-center gap-3'>
+					<div class='h-8 w-8 rounded bg-gradient-to-br from-indigo-600 to-purple-600 shadow-soft'></div>
+					<a href='{{ url_for('main.index') }}' class='font-semibold tracking-tight'>BlogForge</a>
+				</div>
+				<nav class='hidden md:flex items-center gap-2'>
+					<div class='relative group'>
+						<button class='px-3 py-2 rounded-md text-sm bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition'>AI Tools</button>
+						<div class='absolute right-0 mt-2 w-56 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-soft opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition'>
+							<a href='{{ url_for('posts.list_posts') }}' class='block px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800'>✨ Repurpose</a>
+							<a href='{{ url_for('posts.list_posts') }}' class='block px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800'>🧠 Summarize</a>
+							<a href='{{ url_for('posts.list_posts') }}' class='block px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800'>🏷️ Generate Tags</a>
+						</div>
+					</div>
+				</nav>
+				<div class='flex items-center gap-2'>
+					<button id='themeToggle' class='px-2 py-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition' title='Toggle theme'>
+						<svg class='h-5 w-5 hidden dark:block' viewBox='0 0 24 24' fill='currentColor'><path d='M21.64 13.64A9 9 0 1 1 10.36 2.36 7 7 0 1 0 21.64 13.64z'/></svg>
+						<svg class='h-5 w-5 dark:hidden' viewBox='0 0 24 24' fill='currentColor'><path d='M6.76 4.84l-1.8-1.79L3.17 4.84l1.79 1.79 1.8-1.79zM1 13h3v-2H1v2zm10 10h2v-3h-2v3zm9.83-2.17l-1.79-1.79-1.8 1.79 1.8 1.79 1.79-1.79zM20 11v2h3v-2h-3zM6.76 19.16l-1.8 1.79 1.8 1.79 1.79-1.79-1.79-1.79zM13 1h-2v3h2V1zm4.24 3.05l1.79-1.79-1.79-1.79-1.79 1.79 1.79 1.79z'/></svg>
+					</button>
+					<div class='relative'>
+						<button class='h-9 w-9 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden ring-2 ring-transparent hover:ring-purple-600 transition'>
+							<img alt='avatar' src='https://www.gravatar.com/avatar?d=mp&s=80' class='h-full w-full object-cover'>
+						</button>
+						<div class='absolute right-0 mt-2 w-48 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-soft hidden' id='userMenu'>
+							<a href='{{ url_for('main.dashboard') }}' class='block px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800'>Profile</a>
+							<form method='post' action='{{ url_for('auth.logout') }}'>
+								<button class='w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800'>Logout</button>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</header>
+
+		<div class='max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-[240px,1fr] gap-6'>
+			<!-- Sidebar -->
+			<aside class='md:sticky md:top-16 h-max p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-soft'>
+				<nav class='space-y-1'>
+					<a href='{{ url_for('main.dashboard') }}' class='flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition'>Dashboard</a>
+					<a href='{{ url_for('posts.list_posts') }}' class='flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition'>My Posts</a>
+					<a href='{{ url_for('posts.list_posts') }}?filter=drafts' class='flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition'>Drafts</a>
+					<a href='#' class='flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition'>Tags</a>
+					<a href='#' class='flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition'>Settings</a>
+				</nav>
+			</aside>
+
+			<!-- Main content -->
+			<main class='min-h-[60vh]'>
+				{% block content %}{% endblock %}
+			</main>
+		</div>
+	</div>
+
+	<script>
+		// Theme toggle
+		document.getElementById('themeToggle')?.addEventListener('click', function () {
+			const root = document.documentElement;
+			const nowDark = !root.classList.contains('dark');
+			root.classList.toggle('dark', nowDark);
+			try { localStorage.setItem('theme', nowDark ? 'dark' : 'light'); } catch (e) {}
+		});
+		// User menu toggle
+		(function(){
+			const btn = document.querySelector('header button.h-9.w-9');
+			const menu = document.getElementById('userMenu');
+			if (!btn || !menu) return;
+			btn.addEventListener('click', function(){
+				menu.classList.toggle('hidden');
+			});
+			document.addEventListener('click', function(e){
+				if (!menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+					menu.classList.add('hidden');
+				}
+			});
+		})();
+	</script>
+</body>
+</html>

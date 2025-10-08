@@ -1,0 +1,16 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class='flex justify-between items-center mb-4'>
+	<h1 class='text-2xl font-semibold'>Your Posts</h1>
+	<a class='px-3 py-2 rounded bg-black text-white' href='{{ url_for('posts.new_post') }}'>New Post</a>
+</div>
+<ul class='space-y-2'>
+	{% for post in posts %}
+	<li class='p-3 bg-white border rounded'>
+		<a href='{{ url_for('posts.view_post', post_id=post.id) }}' class='font-medium'>{{ post.title }}</a>
+	</li>
+	{% else %}
+	<li class='text-gray-500'>No posts yet.</li>
+	{% endfor %}
+</ul>
+{% endblock %}

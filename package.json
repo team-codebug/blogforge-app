@@ -1,0 +1,12 @@
+{
+	"name": "blogforge",
+	"private": true,
+	"version": "0.1.0",
+	"scripts": {
+		"dev:css": "tailwindcss -i ./app/static/css/input.css -o ./app/static/css/tailwind.css --watch",
+		"build:css": "tailwindcss -i ./app/static/css/input.css -o ./app/static/css/tailwind.css --minify"
+	},
+	"devDependencies": {
+		"tailwindcss": "^3.4.10"
+	}
+}
