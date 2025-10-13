@@ -8,6 +8,7 @@ from ..models import User
 
 @bp.get('/login')
 def login():
+	# Register Google OAuth client
 	google = oauth.register(
 		name='google',
 		client_id=app.config['OAUTH_GOOGLE_CLIENT_ID'],
@@ -15,14 +16,19 @@ def login():
 		server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
 		client_kwargs={'scope': 'openid email profile'},
 	)
-	redirect_uri = app.config['OAUTH_GOOGLE_REDIRECT_URI']
-	return oauth.google.authorize_redirect(redirect_uri)
+	# Build an absolute callback URL consistently
+	redirect_uri = url_for('auth.google_callback', _external=True)
+	return google.authorize_redirect(redirect_uri)
 
 
+# Support both '/auth/callback' and '/auth/google/callback' to avoid mismatch
 @bp.get('/callback')
-def callback():
-	token = oauth.google.authorize_access_token()
-	userinfo = token.get('userinfo') or oauth.google.parse_id_token(token)
+@bp.get('/google/callback')
+def google_callback():
+	# Get the registered Google client
+	google = oauth.google
+	token = google.authorize_access_token()
+	userinfo = token.get('userinfo') or google.parse_id_token(token)
 	if not userinfo:
 		return redirect(url_for('main.index'))
 	google_sub = userinfo.get('sub')

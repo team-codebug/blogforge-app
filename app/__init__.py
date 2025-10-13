@@ -25,6 +25,7 @@ def create_app(config_name: str | None = None) -> Flask:
 	db.init_app(app)
 	migrate.init_app(app, db)
 	login_manager.init_app(app)
+	login_manager.login_view = 'auth.login'
 	csrf_protect.init_app(app)
 	limiter.init_app(app)
 	oauth.init_app(app)
