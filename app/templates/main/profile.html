@@ -1,0 +1,76 @@
+{% extends 'layout.html' %}
+
+{% block title %}Profile · BlogForge{% endblock %}
+
+{% block content %}
+<div class='max-w-4xl mx-auto'>
+	<div class='bg-white dark:bg-slate-800 rounded-lg shadow-card p-8'>
+		<div class='flex items-center gap-6 mb-8'>
+			<div class='w-20 h-20 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center'>
+				{% if user.avatar_url %}
+					<img src='{{ user.avatar_url }}' alt='Profile Picture' class='w-full h-full object-cover'>
+				{% else %}
+					<svg class='w-10 h-10 text-slate-500' fill='currentColor' viewBox='0 0 20 20'>
+						<path fill-rule='evenodd' d='M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z' clip-rule='evenodd'/>
+					</svg>
+				{% endif %}
+			</div>
+			<div>
+				<h1 class='text-3xl font-bold text-slate-800 dark:text-white'>{{ user.name or 'User' }}</h1>
+				<p class='text-slate-600 dark:text-slate-400'>{{ user.email }}</p>
+			</div>
+		</div>
+
+		<div class='grid grid-cols-1 md:grid-cols-2 gap-6'>
+			<div class='bg-slate-50 dark:bg-slate-700 rounded-lg p-6'>
+				<h3 class='text-lg font-semibold text-slate-800 dark:text-white mb-4'>Account Information</h3>
+				<div class='space-y-3'>
+					<div>
+						<label class='text-sm font-medium text-slate-600 dark:text-slate-400'>Name</label>
+						<p class='text-slate-800 dark:text-white'>{{ user.name or 'Not provided' }}</p>
+					</div>
+					<div>
+						<label class='text-sm font-medium text-slate-600 dark:text-slate-400'>Email</label>
+						<p class='text-slate-800 dark:text-white'>{{ user.email }}</p>
+					</div>
+					<div>
+						<label class='text-sm font-medium text-slate-600 dark:text-slate-400'>Member since</label>
+						<p class='text-slate-800 dark:text-white'>{{ user.created_at.strftime('%B %d, %Y') }}</p>
+					</div>
+				</div>
+			</div>
+
+			<div class='bg-slate-50 dark:bg-slate-700 rounded-lg p-6'>
+				<h3 class='text-lg font-semibold text-slate-800 dark:text-white mb-4'>Blog Statistics</h3>
+				<div class='space-y-3'>
+					<div class='flex justify-between items-center'>
+						<span class='text-slate-600 dark:text-slate-400'>Total Posts</span>
+						<span class='text-2xl font-bold text-orange-500'>{{ stats.total_posts }}</span>
+					</div>
+					<div class='flex justify-between items-center'>
+						<span class='text-slate-600 dark:text-slate-400'>Published Posts</span>
+						<span class='text-2xl font-bold text-green-500'>{{ stats.published_posts }}</span>
+					</div>
+					<div class='flex justify-between items-center'>
+						<span class='text-slate-600 dark:text-slate-400'>Drafts</span>
+						<span class='text-2xl font-bold text-yellow-500'>{{ stats.draft_posts }}</span>
+					</div>
+					<div class='flex justify-between items-center'>
+						<span class='text-slate-600 dark:text-slate-400'>Tags</span>
+						<span class='text-2xl font-bold text-purple-500'>{{ stats.unique_tags_count }}</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class='mt-8 flex gap-4'>
+			<a href='{{ url_for('posts.list_posts') }}' class='px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors'>
+				View My Posts
+			</a>
+			<a href='{{ url_for('posts.new_post') }}' class='px-6 py-3 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors'>
+				Create New Post
+			</a>
+		</div>
+	</div>
+</div>
+{% endblock %}

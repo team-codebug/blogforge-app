@@ -46,5 +46,9 @@ def google_callback():
 
 @bp.post('/logout')
 def logout():
-	logout_user()
-	return redirect(url_for('main.index'))
+	"""
+	Log the current user out and redirect to the home page.
+	Uses Flask-Login's logout_user() to clear the session and authentication.
+	"""
+	logout_user()  # Removes user session and clears authentication
+	return redirect(url_for('main.index'))  # Redirect to homepage after logout

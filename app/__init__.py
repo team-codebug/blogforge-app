@@ -29,6 +29,9 @@ def create_app(config_name: str | None = None) -> Flask:
 	csrf_protect.init_app(app)
 	limiter.init_app(app)
 	oauth.init_app(app)
+	
+	# Exempt markdown rendering endpoint from CSRF protection
+	csrf_protect.exempt('posts.render_markdown')
 
 	# register blueprints
 	from .auth import bp as auth_bp

@@ -2,6 +2,8 @@ from flask import request, jsonify
 from flask_login import login_required, current_user
 from . import bp
 from ..extensions import limiter
+from google import genai
+import os
 
 
 @bp.post('/summarize')
@@ -33,3 +35,59 @@ def blog_to_twitter_thread():
 	if not post_id:
 		return jsonify({'error': 'post_id required'}), 400
 	return jsonify({'tweets': ['Tweet 1', 'Tweet 2']})
+
+
+@bp.post('/generate-description')
+@limiter.limit('10/minute;200/day')
+@login_required
+def generate_description():
+	"""Generate a blog description using Gemini AI"""
+	try:
+		data = request.get_json()
+		title = data.get('title', '').strip()
+		content = data.get('content', '').strip()
+		
+		if not title and not content:
+			return jsonify({'error': 'Title or content required'}), 400
+		print(os.getenv('GEMINI_API_KEY'))
+
+		# Configure Gemini
+		client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
+		
+		# Create prompt for description generation
+		prompt = f"""Generate a compelling blog description (max 50 words) for the following blog post:
+
+Title: {title}
+
+Content: {content[:1000]}...
+
+Requirements:
+- Maximum 50 words
+- Engaging and descriptive
+- SEO-friendly
+- Captures the main value proposition
+- Professional tone
+
+Generate only the description text, no additional formatting."""
+		
+		response = client.models.generate_content(
+			model='gemini-2.0-flash',
+			contents=prompt
+		)
+		
+		print(response)
+
+		description = response.text.strip()
+		
+		# Validate word count
+		word_count = len(description.split())
+		if word_count > 50:
+			# Truncate if too long
+			words = description.split()[:50]
+			description = ' '.join(words)
+		
+		return jsonify({'description': description})
+		
+	except Exception as e:
+		print(f"Error generating description: {e}")
+		return jsonify({'error': 'Failed to generate description'}), 500

@@ -3,8 +3,132 @@
 <head>
 	<meta charset='utf-8'>
 	<meta name='viewport' content='width=device-width, initial-scale=1'>
+	<meta name='csrf-token' content='{{ csrf_token() }}'>
 	<title>{% block title %}BlogForge{% endblock %}</title>
 	<link rel='stylesheet' href='{{ url_for('static', filename='css/tailwind.css') }}'>
+	<style>
+		/* Markdown preview styling */
+		.prose h1 { 
+			font-size: 1.5rem; 
+			font-weight: bold; 
+			margin-top: 2rem; 
+			margin-bottom: 1rem; 
+			color: #1e293b; 
+		}
+		.prose h2 { 
+			font-size: 1.25rem; 
+			font-weight: bold; 
+			margin-top: 1.5rem; 
+			margin-bottom: 0.75rem; 
+			color: #1e293b; 
+		}
+		.prose h3 { 
+			font-size: 1.125rem; 
+			font-weight: 600; 
+			margin-top: 1rem; 
+			margin-bottom: 0.5rem; 
+			color: #1e293b; 
+		}
+		.prose h4 { 
+			font-size: 1rem; 
+			font-weight: 600; 
+			margin-top: 0.75rem; 
+			margin-bottom: 0.5rem; 
+			color: #1e293b; 
+		}
+		.prose h5 { 
+			font-size: 0.875rem; 
+			font-weight: 600; 
+			margin-top: 0.5rem; 
+			margin-bottom: 0.5rem; 
+			color: #1e293b; 
+		}
+		.prose h6 { 
+			font-size: 0.75rem; 
+			font-weight: 600; 
+			margin-top: 0.5rem; 
+			margin-bottom: 0.5rem; 
+			color: #1e293b; 
+		}
+		.prose p { 
+			margin-bottom: 0.75rem; 
+			color: #475569; 
+		}
+		.prose ul { 
+			list-style-type: disc; 
+			list-style-position: inside; 
+			margin: 1rem 0; 
+		}
+		.prose ol { 
+			list-style-type: decimal; 
+			list-style-position: inside; 
+			margin: 1rem 0; 
+		}
+		.prose li { 
+			margin-bottom: 0.25rem; 
+		}
+		.prose code { 
+			background-color: #f1f5f9; 
+			padding: 0.125rem 0.25rem; 
+			border-radius: 0.25rem; 
+			font-size: 0.875rem; 
+			font-family: monospace; 
+		}
+		.prose pre { 
+			background-color: #f1f5f9; 
+			padding: 0.75rem; 
+			border-radius: 0.5rem; 
+			overflow-x: auto; 
+			margin: 1rem 0; 
+		}
+		.prose pre code { 
+			background-color: transparent; 
+			padding: 0; 
+		}
+		.prose a { 
+			color: #f97316; 
+			text-decoration: underline; 
+		}
+		.prose a:hover { 
+			color: #ea580c; 
+		}
+		.prose strong { 
+			font-weight: 600; 
+			color: #1e293b; 
+		}
+		.prose em { 
+			font-style: italic; 
+		}
+		.prose blockquote { 
+			border-left: 4px solid #cbd5e1; 
+			padding-left: 1rem; 
+			font-style: italic; 
+			margin: 1rem 0; 
+		}
+		.prose table { 
+			width: 100%; 
+			border-collapse: collapse; 
+			border: 1px solid #cbd5e1; 
+			margin: 1rem 0; 
+		}
+		.prose th, .prose td { 
+			border: 1px solid #cbd5e1; 
+			padding: 0.5rem 0.75rem; 
+		}
+		.prose th { 
+			background-color: #f1f5f9; 
+			font-weight: 600; 
+		}
+		.prose hr { 
+			border: 0; 
+			border-top: 1px solid #cbd5e1; 
+			margin: 1.5rem 0; 
+		}
+		.prose del { 
+			text-decoration: line-through; 
+			color: #64748b; 
+		}
+	</style>
 	<script>
 		// Persisted dark mode
 		(function() {
@@ -31,23 +155,48 @@
 			<nav class='flex-1'>
 				<div class='text-slate-600 text-sm font-medium mb-4'>MENU</div>
 				<div class='space-y-2'>
-					<a href='{{ url_for('main.dashboard') }}' class='flex items-center gap-3 px-4 py-3 rounded-lg bg-peach-200 text-slate-800 font-medium transition-colors'>
+					{% set current_route = request.endpoint %}
+					<a href='{{ url_for('main.dashboard') }}' class='flex items-center gap-3 px-4 py-3 rounded-lg {% if current_route == 'main.dashboard' %}bg-peach-200 text-slate-800 font-medium{% else %}text-slate-700 hover:bg-peach-200{% endif %} transition-colors'>
 						<svg class='w-5 h-5' fill='currentColor' viewBox='0 0 20 20'><path d='M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z'/></svg>
 						Feed
 					</a>
-					<a href='{{ url_for('posts.list_posts') }}' class='flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-peach-200 transition-colors'>
+					<a href='{{ url_for('posts.list_posts') }}?filter=published' class='flex items-center gap-3 px-4 py-3 rounded-lg {% if current_route == 'posts.list_posts' and (request.args.get('filter') == 'published' or not request.args.get('filter')) %}bg-peach-200 text-slate-800 font-medium{% else %}text-slate-700 hover:bg-peach-200{% endif %} transition-colors'>
 						<svg class='w-5 h-5' fill='currentColor' viewBox='0 0 20 20'><path d='M9 2a1 1 0 000 2h2a1 1 0 100-2H9z'/><path fill-rule='evenodd' d='M4 5a2 2 0 012-2v1a1 1 0 102 0V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 3a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z' clip-rule='evenodd'/></svg>
 						My Blogs
 					</a>
-					<a href='{{ url_for('posts.list_posts') }}?filter=drafts' class='flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-peach-200 transition-colors'>
+					<a href='{{ url_for('posts.list_posts') }}?filter=drafts' class='flex items-center gap-3 px-4 py-3 rounded-lg {% if current_route == 'posts.list_posts' and request.args.get('filter') == 'drafts' %}bg-peach-200 text-slate-800 font-medium{% else %}text-slate-700 hover:bg-peach-200{% endif %} transition-colors'>
 						<svg class='w-5 h-5' fill='currentColor' viewBox='0 0 20 20'><path fill-rule='evenodd' d='M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z' clip-rule='evenodd'/></svg>
 						Drafts
 					</a>
-					<a href='{{ url_for('posts.new_post') }}' class='flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-peach-200 transition-colors'>
+					<a href='{{ url_for('posts.list_tags') }}' class='flex items-center gap-3 px-4 py-3 rounded-lg {% if current_route == 'posts.list_tags' %}bg-peach-200 text-slate-800 font-medium{% else %}text-slate-700 hover:bg-peach-200{% endif %} transition-colors'>
+						<svg class='w-5 h-5' fill='currentColor' viewBox='0 0 20 20'><path d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'/></svg>
+						Tags
+					</a>
+					<a href='{{ url_for('posts.new_post') }}' class='flex items-center gap-3 px-4 py-3 rounded-lg {% if current_route == 'posts.new_post' %}bg-peach-200 text-slate-800 font-medium{% else %}text-slate-700 hover:bg-peach-200{% endif %} transition-colors'>
 						<svg class='w-5 h-5' fill='currentColor' viewBox='0 0 20 20'><path fill-rule='evenodd' d='M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z' clip-rule='evenodd'/></svg>
 						Create a new blog
 					</a>
 				</div>
+				
+				<!-- User Section - Only show if logged in -->
+				{% if current_user.is_authenticated %}
+				<div class='mt-8 pt-6 border-t border-peach-300'>
+					<div class='text-slate-600 text-sm font-medium mb-4'>ACCOUNT</div>
+					<div class='space-y-2'>
+						<a href='{{ url_for('main.profile') }}' class='flex items-center gap-3 px-4 py-3 rounded-lg {% if current_route == 'main.profile' %}bg-peach-200 text-slate-800 font-medium{% else %}text-slate-700 hover:bg-peach-200{% endif %} transition-colors'>
+							<svg class='w-5 h-5' fill='currentColor' viewBox='0 0 20 20'><path fill-rule='evenodd' d='M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z' clip-rule='evenodd'/></svg>
+							Profile
+						</a>
+						<form method='post' action='{{ url_for('auth.logout') }}' class='inline'>
+							<input type='hidden' name='csrf_token' value='{{ csrf_token() }}'>
+							<button type='submit' class='flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-peach-200 transition-colors w-full text-left'>
+								<svg class='w-5 h-5' fill='currentColor' viewBox='0 0 20 20'><path fill-rule='evenodd' d='M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z' clip-rule='evenodd'/></svg>
+								Logout
+							</button>
+						</form>
+					</div>
+				</div>
+				{% endif %}
 			</nav>
 
 		</aside>
@@ -65,18 +214,22 @@
 						</div>
 					</div>
 
-					<!-- Profile Icon -->
+					<!-- Profile Icon - Only show if logged in -->
+					{% if current_user.is_authenticated %}
 					<div class='relative'>
-						<button class='w-8 h-8 rounded-full bg-slate-200 overflow-hidden ring-2 ring-transparent hover:ring-orange-500 transition'>
-							<img alt='avatar' src='https://www.gravatar.com/avatar?d=mp&s=80' class='h-full w-full object-cover'>
-						</button>
-						<div class='absolute right-0 mt-2 w-48 rounded-md border border-slate-200 bg-white shadow-soft hidden' id='userMenu'>
-							<a href='{{ url_for('main.dashboard') }}' class='block px-4 py-2 hover:bg-slate-50'>Profile</a>
-							<form method='post' action='{{ url_for('auth.logout') }}'>
-								<button class='w-full text-left px-4 py-2 hover:bg-slate-50'>Logout</button>
-							</form>
-						</div>
+						<a href='{{ url_for('main.profile') }}' class='w-8 h-8 rounded-full bg-slate-200 overflow-hidden ring-2 ring-transparent hover:ring-orange-500 transition block'>
+							{% if current_user.avatar_url %}
+								<img alt='avatar' src='{{ current_user.avatar_url }}' class='h-full w-full object-cover'>
+							{% else %}
+								<div class='h-full w-full bg-slate-300 flex items-center justify-center'>
+									<svg class='w-5 h-5 text-slate-600' fill='currentColor' viewBox='0 0 20 20'>
+										<path fill-rule='evenodd' d='M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z' clip-rule='evenodd'/>
+									</svg>
+								</div>
+							{% endif %}
+						</a>
 					</div>
+					{% endif %}
 				</div>
 			</header>
 
@@ -87,21 +240,5 @@
 		</div>
 	</div>
 
-	<script>
-		// User menu toggle
-		(function(){
-			const btn = document.querySelector('header button.w-8.h-8');
-			const menu = document.getElementById('userMenu');
-			if (!btn || !menu) return;
-			btn.addEventListener('click', function(){
-				menu.classList.toggle('hidden');
-			});
-			document.addEventListener('click', function(e){
-				if (!menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
-					menu.classList.add('hidden');
-				}
-			});
-		})();
-	</script>
 </body>
 </html>

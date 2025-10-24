@@ -46,6 +46,7 @@ class Post(db.Model):
 	user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True, nullable=False)
 	title = db.Column(db.String(255), nullable=False)
 	slug = db.Column(db.String(255), index=True, nullable=False)
+	description = db.Column(db.String(500), nullable=True)
 	content_markdown = db.Column(db.Text, nullable=False)
 	content_html = db.Column(db.Text, nullable=True)
 	summary = db.Column(db.Text, nullable=True)

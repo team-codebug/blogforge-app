@@ -1,16 +1,125 @@
 {% extends 'layout.html' %}
 {% block content %}
-<div class='flex justify-between items-center mb-4'>
-	<h1 class='text-2xl font-semibold'>Your Posts</h1>
-	<a class='px-3 py-2 rounded bg-black text-white' href='{{ url_for('posts.new_post') }}'>New Post</a>
-</div>
-<ul class='space-y-2'>
-	{% for post in posts %}
-	<li class='p-3 bg-white border rounded'>
-		<a href='{{ url_for('posts.view_post', post_id=post.id) }}' class='font-medium'>{{ post.title }}</a>
-	</li>
+<div class='max-w-6xl mx-auto space-y-6 bg-white min-h-screen p-6'>
+	<div class='flex justify-between items-center mb-6'>
+		<div>
+			<h1 class='text-2xl font-bold text-slate-800'>
+				{% if current_filter == 'drafts' %}
+					Your Drafts
+				{% elif current_filter == 'published' %}
+					Your Published Posts
+				{% else %}
+					Your Posts
+				{% endif %}
+			</h1>
+			{% if current_filter == 'drafts' %}
+				<p class='text-slate-600 mt-1'>Posts that haven't been published yet</p>
+			{% elif current_filter == 'published' %}
+				<p class='text-slate-600 mt-1'>Posts that are live and visible to others</p>
+			{% endif %}
+		</div>
+		<a class='px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors' href='{{ url_for('posts.new_post') }}'>+ New Post</a>
+	</div>
+	
+	{% if posts %}
+	<div class='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+		{% for post in posts %}
+		<div class='bg-white rounded-lg border border-slate-200 shadow-soft hover:shadow-md transition-shadow'>
+			<div class='p-6'>
+				<!-- Post Title -->
+				<h3 class='text-lg font-semibold text-slate-800 mb-2 line-clamp-2'>
+					<a href='{{ url_for('posts.view_post', post_id=post.id) }}' class='hover:text-orange-600 transition-colors'>
+						{{ post.title }}
+					</a>
+				</h3>
+				
+				<!-- Post Description -->
+				{% if post.description %}
+				<p class='text-sm text-slate-600 mb-4 line-clamp-3'>{{ post.description }}</p>
+				{% endif %}
+				
+				<!-- Tags -->
+				{% if post.tags %}
+				<div class='flex flex-wrap gap-2 mb-4'>
+					{% for tag in post.tags %}
+					<span class='tag-color text-xs text-white {{ tag_colors[loop.index0 % tag_colors|length] }}'>
+						{{ tag.name }}
+					</span>
+					{% endfor %}
+				</div>
+				{% endif %}
+				
+				<!-- Post Meta -->
+				<div class='flex items-center justify-between text-xs text-slate-500'>
+					<span>{{ post.created_at.strftime('%b %d, %Y') }}</span>
+					<div class='flex items-center gap-2'>
+						<a href='{{ url_for('posts.edit_post', post_id=post.id) }}' class='text-orange-600 hover:text-orange-700 transition-colors'>
+							<svg class='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+								<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'></path>
+							</svg>
+						</a>
+						{% if post.is_published %}
+						<span class='px-2 py-1 bg-green-100 text-green-800 rounded-full'>Published</span>
+						{% else %}
+						<span class='px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full'>Draft</span>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+		</div>
+		{% endfor %}
+	</div>
 	{% else %}
-	<li class='text-gray-500'>No posts yet.</li>
-	{% endfor %}
-</ul>
+	<div class='text-center py-12'>
+		<div class='w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+			<svg class='w-8 h-8 text-slate-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+				<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'></path>
+			</svg>
+		</div>
+		<h3 class='text-lg font-medium text-slate-600 mb-2'>No posts yet</h3>
+		<p class='text-slate-500 mb-4'>Start writing your first blog post</p>
+		<a href='{{ url_for('posts.new_post') }}' class='inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors'>
+			<svg class='w-4 h-4 mr-2' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+				<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 4v16m8-8H4'></path>
+			</svg>
+			Create Your First Post
+		</a>
+	</div>
+	{% endif %}
+</div>
+
+<style>
+.line-clamp-2 {
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.line-clamp-3 {
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+/* Ensure tag colors are applied properly */
+.tag-color {
+	padding: 5px 8px !important;
+	font-weight: 500;
+	border-radius: 9999px;
+}
+
+/* Force tag background colors */
+.bg-blue-600 { background-color: #2563eb !important; }
+.bg-green-600 { background-color: #16a34a !important; }
+.bg-purple-600 { background-color: #9333ea !important; }
+.bg-pink-600 { background-color: #db2777 !important; }
+.bg-yellow-600 { background-color: #ca8a04 !important; }
+.bg-indigo-600 { background-color: #4f46e5 !important; }
+.bg-red-600 { background-color: #dc2626 !important; }
+.bg-orange-600 { background-color: #ea580c !important; }
+.bg-teal-600 { background-color: #0d9488 !important; }
+.bg-cyan-600 { background-color: #0891b2 !important; }
+</style>
 {% endblock %}
