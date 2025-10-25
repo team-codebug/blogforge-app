@@ -1,9 +1,11 @@
 from flask import request, jsonify
 from flask_login import login_required, current_user
 from . import bp
-from ..extensions import limiter
+from ..extensions import limiter, db
+from ..models import Post
 from google import genai
 import os
+import json
 
 
 @bp.post('/summarize')
@@ -21,20 +23,145 @@ def summarize():
 @limiter.limit('5/minute;100/day')
 @login_required
 def blog_to_linkedin():
-	post_id = request.json.get('post_id') if request.is_json else None
-	if not post_id:
-		return jsonify({'error': 'post_id required'}), 400
-	return jsonify({'text': 'LinkedIn-formatted text will appear here.'})
+	"""Convert blog post to LinkedIn post using Gemini AI"""
+	try:
+		post_id = request.json.get('post_id') if request.is_json else None
+		if not post_id:
+			return jsonify({'error': 'post_id required'}), 400
+		
+		# Get the post
+		post = Post.query.filter_by(id=post_id, user_id=current_user.id).first()
+		if not post:
+			return jsonify({'error': 'Post not found'}), 404
+		
+		# Configure Gemini
+		client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
+		
+		# Create prompt for LinkedIn conversion
+		prompt = f"""Convert this blog post into a professional LinkedIn post:
+
+Title: {post.title}
+Description: {post.description or ''}
+
+Blog Content:
+{post.content_markdown[:2000]}...
+
+Requirements:
+- Professional tone suitable for LinkedIn
+- Engaging and thought-provoking
+- Include relevant hashtags (3-5 max)
+- Keep it concise but impactful
+- Add a call-to-action if appropriate
+- Maximum 300 words
+
+Generate a LinkedIn post that captures the essence of the blog while being optimized for LinkedIn's professional audience."""
+		
+		response = client.models.generate_content(
+			model='gemini-2.0-flash',
+			contents=prompt
+		)
+		
+		linkedin_content = response.text.strip()
+		
+		# Save to database
+		post.linkedin_content = linkedin_content
+		db.session.commit()
+		
+		return jsonify({'linkedin_content': linkedin_content})
+		
+	except Exception as e:
+		print(f"Error generating LinkedIn content: {e}")
+		return jsonify({'error': 'Failed to generate LinkedIn content'}), 500
 
 
 @bp.post('/blog-to-twitter-thread')
 @limiter.limit('5/minute;100/day')
 @login_required
 def blog_to_twitter_thread():
-	post_id = request.json.get('post_id') if request.is_json else None
-	if not post_id:
-		return jsonify({'error': 'post_id required'}), 400
-	return jsonify({'tweets': ['Tweet 1', 'Tweet 2']})
+	"""Convert blog post to Twitter thread using Gemini AI"""
+	try:
+		post_id = request.json.get('post_id') if request.is_json else None
+		if not post_id:
+			return jsonify({'error': 'post_id required'}), 400
+		
+		# Get the post
+		post = Post.query.filter_by(id=post_id, user_id=current_user.id).first()
+		if not post:
+			return jsonify({'error': 'Post not found'}), 404
+		
+		# Configure Gemini
+		client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
+		
+		# Create prompt for Twitter thread conversion
+		prompt = f"""Convert this blog post into a Twitter thread:
+
+Title: {post.title}
+Description: {post.description or ''}
+
+Blog Content:
+{post.content_markdown[:2000]}...
+
+Requirements:
+- Break down the content into 3-8 tweets
+- Each tweet should be under 280 characters
+- Include thread numbering (1/5, 2/5, etc.)
+- Use engaging, conversational tone
+- Include relevant hashtags (1-2 per tweet max)
+- Make it shareable and engaging
+- Each tweet should flow naturally to the next
+
+IMPORTANT: Return ONLY a clean JSON array with no markdown formatting, no code blocks, no extra text. Just the array:
+["1/5 Tweet content here...", "2/5 Next tweet content...", ...]"""
+		
+		response = client.models.generate_content(
+			model='gemini-2.0-flash',
+			contents=prompt
+		)
+		
+		# Clean up the response and parse JSON
+		response_text = response.text.strip()
+		
+		# Remove any markdown code blocks or extra formatting
+		if '```json' in response_text:
+			response_text = response_text.split('```json')[1].split('```')[0].strip()
+		elif '```' in response_text:
+			response_text = response_text.split('```')[1].split('```')[0].strip()
+		
+		# Try to parse as JSON
+		try:
+			twitter_thread = json.loads(response_text)
+		except json.JSONDecodeError:
+			# Fallback: try to extract array from text
+			import re
+			# Look for array pattern in the text
+			array_match = re.search(r'\[(.*?)\]', response_text, re.DOTALL)
+			if array_match:
+				array_content = array_match.group(1)
+				# Split by quotes and clean up
+				tweets = []
+				for item in array_content.split('","'):
+					item = item.strip().strip('"').strip("'")
+					if item and not item.startswith('[') and not item.endswith(']'):
+						tweets.append(item)
+				twitter_thread = tweets
+			else:
+				# Final fallback: split by lines and clean up
+				lines = response_text.split('\n')
+				twitter_thread = []
+				for line in lines:
+					line = line.strip().strip('"').strip("'").strip(',')
+					if line and not line.startswith('[') and not line.endswith(']') and not line.startswith('```'):
+						twitter_thread.append(line)
+		
+		# Save to database as JSON string
+		post.twitter_thread = json.dumps(twitter_thread)
+		db.session.commit()
+		
+		return jsonify({'twitter_thread': twitter_thread})
+		
+	except Exception as e:
+		print(f"Error generating Twitter thread: {e}")
+		return jsonify({'error': 'Failed to generate Twitter thread'}), 500
 
 
 @bp.post('/generate-description')

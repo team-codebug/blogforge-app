@@ -1,4 +1,5 @@
 from flask import Flask
+import json
 from .config import get_config
 from .extensions import (
 	db,
@@ -43,5 +44,22 @@ def create_app(config_name: str | None = None) -> Flask:
 	app.register_blueprint(posts_bp, url_prefix='/posts')
 	app.register_blueprint(ai_bp, url_prefix='/api/ai')
 	app.register_blueprint(main_bp)
+	
+	# Add custom Jinja2 filters
+	@app.template_filter('from_json')
+	def from_json_filter(value):
+		try:
+			if not value:
+				return []
+			# Clean up the value first
+			value = str(value).strip()
+			# Remove any markdown formatting
+			if '```json' in value:
+				value = value.split('```json')[1].split('```')[0].strip()
+			elif '```' in value:
+				value = value.split('```')[1].split('```')[0].strip()
+			return json.loads(value)
+		except (json.JSONDecodeError, TypeError, AttributeError):
+			return []
 
 	return app

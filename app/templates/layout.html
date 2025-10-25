@@ -206,13 +206,34 @@
 			<!-- Top Navigation Bar -->
 			<header class='bg-white border-b border-slate-200 px-6 py-4'>
 				<div class='flex items-center justify-between'>
-					<!-- Search Bar -->
+					<!-- Search Bar - Only show on Feed page -->
+					{% if request.endpoint == 'main.dashboard' %}
 					<div class='flex-1 max-w-md'>
-						<div class='relative'>
-							<input type='text' placeholder='Search here...' class='w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500'>
+						<form method='GET' action='{{ url_for('main.dashboard') }}' class='relative'>
+							<input 
+								type='text' 
+								name='q' 
+								value='{{ request.args.get('q', '') }}' 
+								placeholder='Search blogs, tags, or authors...' 
+								class='w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500'
+							>
 							<svg class='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400' fill='currentColor' viewBox='0 0 20 20'><path fill-rule='evenodd' d='M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z' clip-rule='evenodd'/></svg>
-						</div>
+							{% if request.args.get('q') %}
+							<button 
+								type='button' 
+								onclick='clearHeaderSearch()' 
+								class='absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600'
+							>
+								<svg class='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+									<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 18L18 6M6 6l12 12'></path>
+								</svg>
+							</button>
+							{% endif %}
+						</form>
 					</div>
+					{% else %}
+					<div class='flex-1'></div>
+					{% endif %}
 
 					<!-- Profile Icon - Only show if logged in -->
 					{% if current_user.is_authenticated %}
@@ -240,5 +261,11 @@
 		</div>
 	</div>
 
+	<script>
+		// Clear header search function
+		window.clearHeaderSearch = function() {
+			window.location.href = '{{ url_for('main.dashboard') }}';
+		};
+	</script>
 </body>
 </html>

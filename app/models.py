@@ -50,6 +50,8 @@ class Post(db.Model):
 	content_markdown = db.Column(db.Text, nullable=False)
 	content_html = db.Column(db.Text, nullable=True)
 	summary = db.Column(db.Text, nullable=True)
+	linkedin_content = db.Column(db.Text, nullable=True)
+	twitter_thread = db.Column(db.Text, nullable=True)
 	is_published = db.Column(db.Boolean, default=False, nullable=False)
 	published_at = db.Column(db.DateTime, nullable=True)
 	created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)

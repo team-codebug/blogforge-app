@@ -20,8 +20,34 @@ def index():
 @bp.get('/dashboard')
 @login_required
 def dashboard():
-	# Get all published posts from all users, sorted by latest first
-	published_posts = Post.query.filter_by(is_published=True).order_by(Post.updated_at.desc()).all()
+	# Get search query from URL parameters
+	search_query = request.args.get('q', '').strip()
+	
+	# Start with base query for published posts
+	query = Post.query.filter_by(is_published=True)
+	
+	# Apply search filter if query is provided
+	if search_query:
+		# Search in title, description, and tags
+		from sqlalchemy import or_
+		from ..models import Tag
+		
+		# Create search conditions
+		search_conditions = [
+			Post.title.ilike(f'%{search_query}%'),
+			Post.description.ilike(f'%{search_query}%')
+		]
+		
+		# Add tag search condition
+		search_conditions.append(
+			Post.tags.any(Tag.name.ilike(f'%{search_query}%'))
+		)
+		
+		# Apply the search conditions
+		query = query.filter(or_(*search_conditions))
+	
+	# Get posts sorted by latest first
+	published_posts = query.order_by(Post.updated_at.desc()).all()
 	
 	# Define tag colors for random assignment - dark backgrounds with white text
 	tag_colors = [
@@ -37,7 +63,7 @@ def dashboard():
 		'bg-cyan-600 text-white'
 	]
 	
-	return render_template('main/dashboard.html', posts=published_posts, tag_colors=tag_colors)
+	return render_template('main/dashboard.html', posts=published_posts, tag_colors=tag_colors, search_query=search_query)
 
 
 @bp.get('/profile')
