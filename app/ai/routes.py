@@ -2,7 +2,7 @@ from flask import request, jsonify
 from flask_login import login_required, current_user
 from . import bp
 from ..extensions import limiter, db
-from ..models import Post
+from ..models import Blog
 from google import genai
 import os
 import json
@@ -25,14 +25,16 @@ def summarize():
 def blog_to_linkedin():
 	"""Convert blog post to LinkedIn post using Gemini AI"""
 	try:
-		post_id = request.json.get('post_id') if request.is_json else None
-		if not post_id:
-			return jsonify({'error': 'post_id required'}), 400
+		print(f"LinkedIn request JSON: {request.json}")
+		blog_id = request.json.get('blog_id') if request.is_json else None
+		print(f"Blog ID received: {blog_id}")
+		if not blog_id:
+			return jsonify({'error': 'blog_id required'}), 400
 		
-		# Get the post
-		post = Post.query.filter_by(id=post_id, user_id=current_user.id).first()
-		if not post:
-			return jsonify({'error': 'Post not found'}), 404
+		# Get the blog
+		blog = Blog.query.filter_by(id=blog_id, user_id=current_user.id).first()
+		if not blog:
+			return jsonify({'error': 'Blog not found'}), 404
 		
 		# Configure Gemini
 		client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
@@ -40,11 +42,11 @@ def blog_to_linkedin():
 		# Create prompt for LinkedIn conversion
 		prompt = f"""Convert this blog post into a professional LinkedIn post:
 
-Title: {post.title}
-Description: {post.description or ''}
+Title: {blog.title}
+Description: {blog.description or ''}
 
 Blog Content:
-{post.content_markdown[:2000]}...
+{blog.content_markdown[:2000]}...
 
 Requirements:
 - Professional tone suitable for LinkedIn
@@ -64,7 +66,7 @@ Generate a LinkedIn post that captures the essence of the blog while being optim
 		linkedin_content = response.text.strip()
 		
 		# Save to database
-		post.linkedin_content = linkedin_content
+		blog.linkedin_content = linkedin_content
 		db.session.commit()
 		
 		return jsonify({'linkedin_content': linkedin_content})
@@ -80,14 +82,14 @@ Generate a LinkedIn post that captures the essence of the blog while being optim
 def blog_to_twitter_thread():
 	"""Convert blog post to Twitter thread using Gemini AI"""
 	try:
-		post_id = request.json.get('post_id') if request.is_json else None
-		if not post_id:
-			return jsonify({'error': 'post_id required'}), 400
+		blog_id = request.json.get('blog_id') if request.is_json else None
+		if not blog_id:
+			return jsonify({'error': 'blog_id required'}), 400
 		
-		# Get the post
-		post = Post.query.filter_by(id=post_id, user_id=current_user.id).first()
-		if not post:
-			return jsonify({'error': 'Post not found'}), 404
+		# Get the blog
+		blog = Blog.query.filter_by(id=blog_id, user_id=current_user.id).first()
+		if not blog:
+			return jsonify({'error': 'Blog not found'}), 404
 		
 		# Configure Gemini
 		client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
@@ -95,11 +97,11 @@ def blog_to_twitter_thread():
 		# Create prompt for Twitter thread conversion
 		prompt = f"""Convert this blog post into a Twitter thread:
 
-Title: {post.title}
-Description: {post.description or ''}
+Title: {blog.title}
+Description: {blog.description or ''}
 
 Blog Content:
-{post.content_markdown[:2000]}...
+{blog.content_markdown[:2000]}...
 
 Requirements:
 - Break down the content into 3-8 tweets
@@ -154,7 +156,7 @@ IMPORTANT: Return ONLY a clean JSON array with no markdown formatting, no code b
 						twitter_thread.append(line)
 		
 		# Save to database as JSON string
-		post.twitter_thread = json.dumps(twitter_thread)
+		blog.twitter_thread = json.dumps(twitter_thread)
 		db.session.commit()
 		
 		return jsonify({'twitter_thread': twitter_thread})

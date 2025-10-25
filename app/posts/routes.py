@@ -2,28 +2,28 @@ from flask import render_template, request, redirect, url_for, abort, jsonify
 from flask_login import login_required, current_user
 from . import bp
 from ..extensions import db
-from ..models import Post, Tag
+from ..models import Blog, Tag
 from markdown_it import MarkdownIt
 from datetime import datetime
 
 
 @bp.get('/')
 @login_required
-def list_posts():
+def list_blogs():
 	# Get filter parameter from query string
 	filter_type = request.args.get('filter', 'published')
 	
-	# Base query for user's posts
-	query = Post.query.filter_by(user_id=current_user.id)
+	# Base query for user's blogs
+	query = Blog.query.filter_by(user_id=current_user.id)
 	
 	# Apply filter based on parameter
 	if filter_type == 'drafts':
-		posts = query.filter_by(is_published=False).order_by(Post.updated_at.desc()).all()
+		blogs = query.filter_by(is_published=False).order_by(Blog.updated_at.desc()).all()
 	elif filter_type == 'published':
-		posts = query.filter_by(is_published=True).order_by(Post.updated_at.desc()).all()
+		blogs = query.filter_by(is_published=True).order_by(Blog.updated_at.desc()).all()
 	else:
-		# Default to all posts if no valid filter
-		posts = query.order_by(Post.updated_at.desc()).all()
+		# Default to all blogs if no valid filter
+		blogs = query.order_by(Blog.updated_at.desc()).all()
 	
 	# Define tag colors for random assignment - dark backgrounds with white text
 	tag_colors = [
@@ -39,26 +39,26 @@ def list_posts():
 		'bg-cyan-600 text-white'
 	]
 	
-	return render_template('posts/list.html', posts=posts, tag_colors=tag_colors, current_filter=filter_type)
+	return render_template('posts/list.html', blogs=blogs, tag_colors=tag_colors, current_filter=filter_type)
 
 
 @bp.get('/new')
 @login_required
-def new_post():
-	return render_template('posts/edit.html', post=None, available_tags=[], current_tag_ids=[])
+def new_blog():
+	return render_template('posts/edit.html', blog=None, available_tags=[], current_tag_ids=[])
 
 
 @bp.post('/')
 @login_required
-def create_post():
+def create_blog():
 	title = request.form.get('title', '').strip()
 	description = request.form.get('description', '').strip()
 	content = request.form.get('content', '').strip()
 	if not title:
-		return redirect(url_for('posts.new_post'))
+		return redirect(url_for('posts.new_blog'))
 	
-	# Create post as published by default
-	post = Post(
+	# Create blog as published by default
+	blog = Blog(
 		user_id=current_user.id, 
 		title=title, 
 		slug=title.lower().replace(' ', '-'), 
@@ -67,50 +67,53 @@ def create_post():
 		is_published=True,  # Set as published by default
 		published_at=datetime.utcnow()  # Set publish timestamp
 	)
-	db.session.add(post)
+	db.session.add(blog)
 	db.session.commit()
-	return redirect(url_for('posts.edit_post', post_id=post.id))
+	return redirect(url_for('posts.edit_blog', blog_id=blog.id))
 
 
-@bp.get('/<int:post_id>')
+@bp.get('/<int:blog_id>')
 @login_required
-def view_post(post_id: int):
-	post = Post.query.filter_by(id=post_id, user_id=current_user.id).first()
-	if not post:
+def view_blog(blog_id: int):
+	blog = Blog.query.filter_by(id=blog_id, user_id=current_user.id).first()
+	if not blog:
 		abort(404)
-	return render_template('posts/detail.html', post=post)
+	return render_template('posts/detail.html', blog=blog)
 
 
-@bp.get('/<int:post_id>/edit')
+@bp.get('/<int:blog_id>/edit')
 @login_required
-def edit_post(post_id: int):
-	post = Post.query.filter_by(id=post_id, user_id=current_user.id).first()
-	if not post:
+def edit_blog(blog_id: int):
+	blog = Blog.query.filter_by(id=blog_id, user_id=current_user.id).first()
+	if not blog:
 		abort(404)
 	
-	# Get all user's tags and current post tags
+	# Get all user's tags and current blog tags
 	available_tags = Tag.query.filter_by(user_id=current_user.id).order_by(Tag.name).all()
-	current_tag_ids = [tag.id for tag in post.tags]
+	current_tag_ids = [tag.id for tag in blog.tags]
 	
-	return render_template('posts/edit.html', post=post, available_tags=available_tags, current_tag_ids=current_tag_ids)
+	return render_template('posts/edit.html', blog=blog, available_tags=available_tags, current_tag_ids=current_tag_ids)
 
 
-@bp.post('/<int:post_id>')
+@bp.post('/<int:blog_id>')
 @login_required
-def update_post(post_id: int):
-	post = Post.query.filter_by(id=post_id, user_id=current_user.id).first()
-	if not post:
+def update_blog(blog_id: int):
+	blog = Blog.query.filter_by(id=blog_id, user_id=current_user.id).first()
+	if not blog:
 		abort(404)
 	
 	# Update basic fields
-	post.title = request.form.get('title', post.title)
-	post.description = request.form.get('description', post.description)
-	post.content_markdown = request.form.get('content', post.content_markdown)
+	blog.title = request.form.get('title', blog.title)
+	blog.description = request.form.get('description', blog.description)
+	blog.content_markdown = request.form.get('content', blog.content_markdown)
 	
-	# Ensure post is published when saving
-	post.is_published = True
-	if not post.published_at:  # Set publish timestamp if not already set
-		post.published_at = datetime.utcnow()
+	# Preserve existing AI-generated content (don't overwrite if not provided in form)
+	# LinkedIn and Twitter content are only updated via AI endpoints, not regular saves
+	
+	# Ensure blog is published when saving
+	blog.is_published = True
+	if not blog.published_at:  # Set publish timestamp if not already set
+		blog.published_at = datetime.utcnow()
 	
 	# Handle tag assignments
 	selected_tag_ids = request.form.getlist('tags')
@@ -119,11 +122,11 @@ def update_post(post_id: int):
 	# Get tags that belong to the current user
 	user_tags = Tag.query.filter_by(user_id=current_user.id).filter(Tag.id.in_(selected_tag_ids)).all()
 	
-	# Update post tags
-	post.tags = user_tags
+	# Update blog tags
+	blog.tags = user_tags
 	
 	db.session.commit()
-	return redirect(url_for('posts.edit_post', post_id=post.id))
+	return redirect(url_for('posts.edit_blog', blog_id=blog.id))
 
 
 @bp.get('/tags')
@@ -186,28 +189,28 @@ def auto_save():
 	"""Auto-save post content without updating timestamps"""
 	try:
 		data = request.get_json()
-		post_id = data.get('post_id')
+		blog_id = data.get('blog_id')
 		title = data.get('title', '').strip()
 		description = data.get('description', '').strip()
 		content = data.get('content', '').strip()
 		
-		if not post_id:
-			return jsonify({'error': 'Post ID required'}), 400
+		if not blog_id:
+			return jsonify({'error': 'Blog ID required'}), 400
 		
-		# Get the post and verify ownership
-		post = Post.query.filter_by(id=post_id, user_id=current_user.id).first()
-		if not post:
-			return jsonify({'error': 'Post not found'}), 404
+		# Get the blog and verify ownership
+		blog = Blog.query.filter_by(id=blog_id, user_id=current_user.id).first()
+		if not blog:
+			return jsonify({'error': 'Blog not found'}), 404
 		
 		# Update content without changing updated_at timestamp
-		post.title = title
-		post.description = description
-		post.content_markdown = content
+		blog.title = title
+		blog.description = description
+		blog.content_markdown = content
 		
-		# Ensure post is published when auto-saving
-		post.is_published = True
-		if not post.published_at:  # Set publish timestamp if not already set
-			post.published_at = datetime.utcnow()
+		# Ensure blog is published when auto-saving
+		blog.is_published = True
+		if not blog.published_at:  # Set publish timestamp if not already set
+			blog.published_at = datetime.utcnow()
 		
 		# Don't update updated_at for auto-save
 		db.session.commit()
@@ -233,7 +236,7 @@ def save_draft():
 			return jsonify({'error': 'Title required'}), 400
 		
 		# Create post as draft
-		post = Post(
+		blog = Blog(
 			user_id=current_user.id,
 			title=title,
 			slug=title.lower().replace(' ', '-'),
@@ -242,10 +245,10 @@ def save_draft():
 			is_published=False,  # Save as draft
 			published_at=None
 		)
-		db.session.add(post)
+		db.session.add(blog)
 		db.session.commit()
 		
-		return jsonify({'success': True, 'message': 'Saved as draft', 'post_id': post.id})
+		return jsonify({'success': True, 'message': 'Saved as draft', 'blog_id': blog.id})
 		
 	except Exception as e:
 		print(f"Save draft error: {e}")

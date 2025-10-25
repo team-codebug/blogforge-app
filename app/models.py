@@ -3,9 +3,9 @@ from sqlalchemy import Enum
 from .extensions import db
 
 
-post_tags = db.Table(
-	'post_tags',
-	db.Column('post_id', db.Integer, db.ForeignKey('posts.id'), primary_key=True),
+blog_tags = db.Table(
+	'blog_tags',
+	db.Column('blog_id', db.Integer, db.ForeignKey('blogs.id'), primary_key=True),
 	db.Column('tag_id', db.Integer, db.ForeignKey('tags.id'), primary_key=True),
 )
 
@@ -20,7 +20,7 @@ class User(db.Model):
 	created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 	updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-	posts = db.relationship('Post', backref='user', lazy=True)
+	blogs = db.relationship('Blog', backref='user', lazy=True)
 	social_posts = db.relationship('SocialPost', backref='user', lazy=True)
 
 	# Flask-Login required methods
@@ -40,8 +40,8 @@ class User(db.Model):
 		return str(self.id)
 
 
-class Post(db.Model):
-	__tablename__ = 'posts'
+class Blog(db.Model):
+	__tablename__ = 'blogs'
 	id = db.Column(db.Integer, primary_key=True)
 	user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True, nullable=False)
 	title = db.Column(db.String(255), nullable=False)
@@ -57,7 +57,7 @@ class Post(db.Model):
 	created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 	updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-	tags = db.relationship('Tag', secondary=post_tags, lazy='subquery', backref=db.backref('posts', lazy=True))
+	tags = db.relationship('Tag', secondary=blog_tags, lazy='subquery', backref=db.backref('blogs', lazy=True))
 
 
 class Tag(db.Model):
@@ -71,10 +71,10 @@ class Tag(db.Model):
 class SocialPost(db.Model):
 	__tablename__ = 'social_posts'
 	id = db.Column(db.Integer, primary_key=True)
-	post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), index=True, nullable=False)
+	blog_id = db.Column(db.Integer, db.ForeignKey('blogs.id'), index=True, nullable=False)
 	user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True, nullable=False)
 	platform = db.Column(Enum('linkedin', 'twitter', name='social_platform'), nullable=False)
 	payload_json = db.Column(db.Text, nullable=False)
 	created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
-	post = db.relationship('Post', backref='social_posts')
+	blog = db.relationship('Blog', backref='social_posts')

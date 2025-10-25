@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
 {% block content %}
-<h1 class='text-2xl font-semibold mb-2'>{{ post.title }}</h1>
-<pre class='p-4 bg-white border rounded whitespace-pre-wrap'>{{ post.content_markdown }}</pre>
-<a class='inline-block mt-4 px-3 py-2 rounded bg-black text-white' href='{{ url_for('posts.edit_post', post_id=post.id) }}'>Edit</a>
+<h1 class='text-2xl font-semibold mb-2'>{{ blog.title }}</h1>
+<pre class='p-4 bg-white border rounded whitespace-pre-wrap'>{{ blog.content_markdown }}</pre>
+<a class='inline-block mt-4 px-3 py-2 rounded bg-black text-white' href='{{ url_for('posts.edit_blog', blog_id=blog.id) }}'>Edit</a>
 {% endblock %}

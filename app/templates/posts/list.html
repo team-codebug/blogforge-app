@@ -18,30 +18,30 @@
 				<p class='text-slate-600 mt-1'>Posts that are live and visible to others</p>
 			{% endif %}
 		</div>
-		<a class='px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors' href='{{ url_for('posts.new_post') }}'>+ New Post</a>
+		<a class='px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors' href='{{ url_for('posts.new_blog') }}'>+ New Blog</a>
 	</div>
 	
-	{% if posts %}
+	{% if blogs %}
 	<div class='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-		{% for post in posts %}
+		{% for blog in blogs %}
 		<div class='bg-white rounded-lg border border-slate-200 shadow-soft hover:shadow-md transition-shadow'>
 			<div class='p-6'>
 				<!-- Post Title -->
 				<h3 class='text-lg font-semibold text-slate-800 mb-2 line-clamp-2'>
-					<a href='{{ url_for('posts.view_post', post_id=post.id) }}' class='hover:text-orange-600 transition-colors'>
-						{{ post.title }}
+					<a href='{{ url_for('posts.view_blog', blog_id=blog.id) }}' class='hover:text-orange-600 transition-colors'>
+						{{ blog.title }}
 					</a>
 				</h3>
 				
 				<!-- Post Description -->
-				{% if post.description %}
-				<p class='text-sm text-slate-600 mb-4 line-clamp-3'>{{ post.description }}</p>
+				{% if blog.description %}
+				<p class='text-sm text-slate-600 mb-4 line-clamp-3'>{{ blog.description }}</p>
 				{% endif %}
 				
 				<!-- Tags -->
-				{% if post.tags %}
+				{% if blog.tags %}
 				<div class='flex flex-wrap gap-2 mb-4'>
-					{% for tag in post.tags %}
+					{% for tag in blog.tags %}
 					<span class='tag-color text-xs text-white {{ tag_colors[loop.index0 % tag_colors|length] }}'>
 						{{ tag.name }}
 					</span>
@@ -51,14 +51,14 @@
 				
 				<!-- Post Meta -->
 				<div class='flex items-center justify-between text-xs text-slate-500'>
-					<span>{{ post.created_at.strftime('%b %d, %Y') }}</span>
+					<span>{{ blog.created_at.strftime('%b %d, %Y') }}</span>
 					<div class='flex items-center gap-2'>
-						<a href='{{ url_for('posts.edit_post', post_id=post.id) }}' class='text-orange-600 hover:text-orange-700 transition-colors'>
+						<a href='{{ url_for('posts.edit_blog', blog_id=blog.id) }}' class='text-orange-600 hover:text-orange-700 transition-colors'>
 							<svg class='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
 								<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'></path>
 							</svg>
 						</a>
-						{% if post.is_published %}
+						{% if blog.is_published %}
 						<span class='px-2 py-1 bg-green-100 text-green-800 rounded-full'>Published</span>
 						{% else %}
 						<span class='px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full'>Draft</span>
@@ -78,11 +78,11 @@
 		</div>
 		<h3 class='text-lg font-medium text-slate-600 mb-2'>No posts yet</h3>
 		<p class='text-slate-500 mb-4'>Start writing your first blog post</p>
-		<a href='{{ url_for('posts.new_post') }}' class='inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors'>
+		<a href='{{ url_for('posts.new_blog') }}' class='inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors'>
 			<svg class='w-4 h-4 mr-2' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
 				<path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 4v16m8-8H4'></path>
 			</svg>
-			Create Your First Post
+			Create Your First Blog
 		</a>
 	</div>
 	{% endif %}

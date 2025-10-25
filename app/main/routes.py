@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, request, jsonify
 from flask_login import current_user, login_required
 from . import bp
 from ..extensions import login_manager
-from ..models import User, Post
+from ..models import User, Blog
 
 
 @login_manager.user_loader
@@ -23,8 +23,8 @@ def dashboard():
 	# Get search query from URL parameters
 	search_query = request.args.get('q', '').strip()
 	
-	# Start with base query for published posts
-	query = Post.query.filter_by(is_published=True)
+	# Start with base query for published blogs
+	query = Blog.query.filter_by(is_published=True)
 	
 	# Apply search filter if query is provided
 	if search_query:
@@ -34,20 +34,20 @@ def dashboard():
 		
 		# Create search conditions
 		search_conditions = [
-			Post.title.ilike(f'%{search_query}%'),
-			Post.description.ilike(f'%{search_query}%')
+			Blog.title.ilike(f'%{search_query}%'),
+			Blog.description.ilike(f'%{search_query}%')
 		]
 		
 		# Add tag search condition
 		search_conditions.append(
-			Post.tags.any(Tag.name.ilike(f'%{search_query}%'))
+			Blog.tags.any(Tag.name.ilike(f'%{search_query}%'))
 		)
 		
 		# Apply the search conditions
 		query = query.filter(or_(*search_conditions))
 	
-	# Get posts sorted by latest first
-	published_posts = query.order_by(Post.updated_at.desc()).all()
+	# Get blogs sorted by latest first
+	published_blogs = query.order_by(Blog.updated_at.desc()).all()
 	
 	# Define tag colors for random assignment - dark backgrounds with white text
 	tag_colors = [
@@ -63,54 +63,54 @@ def dashboard():
 		'bg-cyan-600 text-white'
 	]
 	
-	return render_template('main/dashboard.html', posts=published_posts, tag_colors=tag_colors, search_query=search_query)
+	return render_template('main/dashboard.html', blogs=published_blogs, tag_colors=tag_colors, search_query=search_query)
 
 
 @bp.get('/profile')
 @login_required
 def profile():
 	# Calculate statistics
-	total_posts = len(current_user.posts)
-	published_posts = len([post for post in current_user.posts if post.is_published])
-	draft_posts = total_posts - published_posts
+	total_blogs = len(current_user.blogs)
+	published_blogs = len([blog for blog in current_user.blogs if blog.is_published])
+	draft_blogs = total_blogs - published_blogs
 	
 	# Get unique tags count
 	all_tags = set()
-	for post in current_user.posts:
-		all_tags.update(post.tags)
+	for blog in current_user.blogs:
+		all_tags.update(blog.tags)
 	unique_tags_count = len(all_tags)
 	
 	stats = {
-		'total_posts': total_posts,
-		'published_posts': published_posts,
-		'draft_posts': draft_posts,
+		'total_blogs': total_blogs,
+		'published_blogs': published_blogs,
+		'draft_blogs': draft_blogs,
 		'unique_tags_count': unique_tags_count
 	}
 	
 	return render_template('main/profile.html', user=current_user, stats=stats)
 
 
-@bp.get('/api/blog/<int:post_id>')
+@bp.get('/api/blog/<int:blog_id>')
 @login_required
-def get_blog_content(post_id):
+def get_blog_content(blog_id):
 	"""Get blog content for overlay display"""
-	post = Post.query.filter_by(id=post_id, is_published=True).first()
-	if not post:
+	blog = Blog.query.filter_by(id=blog_id, is_published=True).first()
+	if not blog:
 		return jsonify({'error': 'Blog not found'}), 404
 	
 	# Get author information
-	author = post.user
+	author = blog.user
 	
 	return jsonify({
-		'id': post.id,
-		'title': post.title,
-		'description': post.description,
-		'content': post.content_markdown,
+		'id': blog.id,
+		'title': blog.title,
+		'description': blog.description,
+		'content': blog.content_markdown,
 		'author': {
 			'name': author.name,
 			'avatar_url': author.avatar_url
 		},
-		'created_at': post.created_at.isoformat(),
-		'updated_at': post.updated_at.isoformat(),
-		'tags': [{'name': tag.name} for tag in post.tags]
+		'created_at': blog.created_at.isoformat(),
+		'updated_at': blog.updated_at.isoformat(),
+		'tags': [{'name': tag.name} for tag in blog.tags]
 	})

@@ -1,6 +1,11 @@
 from flask import Flask
 import json
+import os
+from dotenv import load_dotenv
 from .config import get_config
+
+# Load environment variables from .flaskenv
+load_dotenv('.flaskenv')
 from .extensions import (
 	db,
 	migrate,
@@ -14,10 +19,12 @@ from .extensions import (
 def create_app(config_name: str | None = None) -> Flask:
 	app = Flask(__name__, instance_relative_config=True)
 	app.config.from_object(get_config(config_name))
+	
+	# Set environment variables in Flask config
+	app.config['GEMINI_API_KEY'] = os.getenv('GEMINI_API_KEY')
 
 	# Ensure instance folder exists
 	try:
-		import os
 		os.makedirs(app.instance_path, exist_ok=True)
 	except OSError:
 		pass

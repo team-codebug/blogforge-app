@@ -1,10 +1,10 @@
 {% extends 'layout.html' %}
-{% block title %}{{ 'Edit Post · BlogForge' if post else 'New Post · BlogForge' }}{% endblock %}
+{% block title %}{{ 'Edit Post · BlogForge' if blog else 'New Post · BlogForge' }}{% endblock %}
 {% block content %}
 <div class='flex flex-col gap-4'>
 	<div class='flex items-center justify-between'>
-		<h1 class='text-xl md:text-2xl font-semibold'>{{ 'Edit Post' if post else 'New Post' }}</h1>
-		{% if post %}
+		<h1 class='text-xl md:text-2xl font-semibold'>{{ 'Edit Post' if blog else 'New Post' }}</h1>
+		{% if blog %}
 		<div class='flex items-center gap-2'>
 			<button type='button' id='aiLinkedIn' class='px-3 py-2 rounded-md bg-orange-500 text-white shadow-soft hover:bg-orange-600 hover:shadow-lg transition'>✨ Repurpose to LinkedIn</button>
 			<button type='button' id='aiTwitter' class='px-3 py-2 rounded-md bg-orange-500 text-white shadow-soft hover:bg-orange-600 hover:shadow-lg transition'>🐦 Generate Tweet Thread</button>
@@ -12,9 +12,9 @@
 		</div>
 		{% endif %}
 	</div>
-	<form method='post' action='{{ url_for('posts.update_post', post_id=post.id) if post else url_for('posts.create_post') }}' class='space-y-4' data-post-id='{{ post.id if post else "" }}'>
+	<form method='post' action='{{ url_for('posts.update_blog', blog_id=blog.id) if blog else url_for('posts.create_blog') }}' class='space-y-4' data-blog-id='{{ blog.id if blog else "" }}'>
 		<input type='hidden' name='csrf_token' value='{{ csrf_token() }}'>
-		<input type='text' name='title' value='{{ post.title if post else '' }}' placeholder='Post title' class='w-full border border-slate-200 dark:border-slate-800 rounded-lg p-3 bg-white dark:bg-slate-900 shadow-soft outline-none focus:ring-2 focus:ring-orange-500/30'>
+		<input type='text' name='title' value='{{ blog.title if blog else '' }}' placeholder='Blog title' class='w-full border border-slate-200 dark:border-slate-800 rounded-lg p-3 bg-white dark:bg-slate-900 shadow-soft outline-none focus:ring-2 focus:ring-orange-500/30'>
 		
 		<!-- Description Field -->
 		<div class='space-y-2'>
@@ -25,11 +25,11 @@
 					<button type='button' id='generateDescription' class='px-3 py-1 text-xs rounded-md bg-orange-500 text-white hover:bg-orange-600 hover:shadow-lg transition'>✨ Generate with AI</button>
 				</div>
 			</div>
-			<textarea id='descriptionInput' name='description' rows='2' maxlength='500' placeholder='Brief description of your blog post (max 50 words)...' class='w-full border border-slate-200 dark:border-slate-800 rounded-lg p-3 bg-white dark:bg-slate-900 shadow-soft outline-none focus:ring-2 focus:ring-orange-500/30 text-sm resize-none'>{{ post.description if post else '' }}</textarea>
+			<textarea id='descriptionInput' name='description' rows='2' maxlength='500' placeholder='Brief description of your blog post (max 50 words)...' class='w-full border border-slate-200 dark:border-slate-800 rounded-lg p-3 bg-white dark:bg-slate-900 shadow-soft outline-none focus:ring-2 focus:ring-orange-500/30 text-sm resize-none'>{{ blog.description if blog else '' }}</textarea>
 		</div>
 		
 		<!-- Tag Selection (only show when editing existing post) -->
-		{% if post and available_tags %}
+		{% if blog and available_tags %}
 		<div class='space-y-2'>
 			<label class='text-sm font-medium text-slate-700 dark:text-slate-300'>Tags</label>
 			<div class='flex flex-wrap gap-2'>
@@ -57,7 +57,7 @@
 						<span id='saveStatus' class='text-green-600'>Saved</span>
 					</div>
 				</div>
-				<textarea id='mdInput' name='content' rows='22' class='w-full border border-slate-200 dark:border-slate-800 rounded-lg p-3 bg-white dark:bg-slate-900 shadow-soft outline-none focus:ring-2 focus:ring-indigo-600/30 font-mono text-sm' placeholder='Write markdown here...'>{{ post.content_markdown if post else '' }}</textarea>
+				<textarea id='mdInput' name='content' rows='22' class='w-full border border-slate-200 dark:border-slate-800 rounded-lg p-3 bg-white dark:bg-slate-900 shadow-soft outline-none focus:ring-2 focus:ring-indigo-600/30 font-mono text-sm' placeholder='Write markdown here...'>{{ blog.content_markdown if blog else '' }}</textarea>
 			</div>
 			<div class='space-y-2'>
 				<div class='flex items-center justify-between'>
@@ -76,10 +76,10 @@
 	</form>
 	
 	<!-- Social Media Content Display (only show when editing existing post) -->
-	{% if post %}
+	{% if blog %}
 	<div class='mt-8 space-y-6'>
 		<!-- LinkedIn Content -->
-		{% if post.linkedin_content %}
+		{% if blog.linkedin_content %}
 		<div class='bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4'>
 			<div class='flex items-center justify-between mb-3'>
 				<h3 class='text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2'>
@@ -89,13 +89,13 @@
 				<button type='button' onclick='regenerateLinkedIn()' class='text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200'>Regenerate</button>
 			</div>
 			<div class='bg-white dark:bg-slate-900 rounded-md p-4 border border-blue-200 dark:border-blue-700'>
-				<p class='text-slate-800 dark:text-slate-200 whitespace-pre-wrap'>{{ post.linkedin_content }}</p>
+				<p class='text-slate-800 dark:text-slate-200 whitespace-pre-wrap'>{{ blog.linkedin_content }}</p>
 			</div>
 		</div>
 		{% endif %}
 		
 		<!-- Twitter Thread -->
-		{% if post.twitter_thread %}
+		{% if blog.twitter_thread %}
 		<div class='bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-800 rounded-lg p-4'>
 			<div class='flex items-center justify-between mb-3'>
 				<h3 class='text-lg font-semibold text-sky-900 dark:text-sky-100 flex items-center gap-2'>
@@ -105,7 +105,7 @@
 				<button type='button' onclick='regenerateTwitter()' class='text-sm text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-200'>Regenerate</button>
 			</div>
 			<div class='space-y-3'>
-				{% set twitter_tweets = post.twitter_thread | from_json %}
+				{% set twitter_tweets = blog.twitter_thread | from_json %}
 				{% for tweet in twitter_tweets %}
 				<div class='bg-white dark:bg-slate-900 rounded-md p-4 border border-sky-200 dark:border-sky-700'>
 					<p class='text-slate-800 dark:text-slate-200'>{{ tweet }}</p>
@@ -157,6 +157,89 @@
 	window.addEventListener('DOMContentLoaded', function(){
 		const mdIn = document.getElementById('mdInput');
 		const mdPrev = document.getElementById('mdPreview');
+		
+		// Get blog ID from form data attribute
+		const form = document.querySelector('form[data-blog-id]');
+		const blogId = form ? form.getAttribute('data-blog-id') : null;
+		
+		// Function to update LinkedIn content in the UI
+		function updateLinkedInContent(content) {
+			// Find or create the social media content section
+			let socialSection = document.querySelector('.mt-8.space-y-6');
+			if (!socialSection) {
+				// Create the social media section if it doesn't exist
+				socialSection = document.createElement('div');
+				socialSection.className = 'mt-8 space-y-6';
+				document.querySelector('.flex.flex-col.gap-4').appendChild(socialSection);
+			}
+			
+			// Check if LinkedIn content section already exists
+			let linkedinSection = document.querySelector('.bg-blue-50');
+			if (!linkedinSection) {
+				// Create LinkedIn content section
+				linkedinSection = document.createElement('div');
+				linkedinSection.className = 'bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4';
+				linkedinSection.innerHTML = `
+					<div class='flex items-center justify-between mb-3'>
+						<h3 class='text-lg font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2'>
+							<svg class='w-5 h-5' fill='currentColor' viewBox='0 0 24 24'><path d='M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z'/></svg>
+							LinkedIn Post
+						</h3>
+						<button type='button' onclick='regenerateLinkedIn()' class='text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200'>Regenerate</button>
+					</div>
+					<div class='bg-white dark:bg-slate-900 rounded-md p-4 border border-blue-200 dark:border-blue-700'>
+						<p class='text-slate-800 dark:text-slate-200 whitespace-pre-wrap'>${content}</p>
+					</div>
+				`;
+				socialSection.appendChild(linkedinSection);
+			} else {
+				// Update existing LinkedIn content
+				const contentParagraph = linkedinSection.querySelector('p');
+				if (contentParagraph) {
+					contentParagraph.textContent = content;
+				}
+			}
+		}
+		
+		// Function to update Twitter content in the UI
+		function updateTwitterContent(content) {
+			// Find or create the social media content section
+			let socialSection = document.querySelector('.mt-8.space-y-6');
+			if (!socialSection) {
+				// Create the social media section if it doesn't exist
+				socialSection = document.createElement('div');
+				socialSection.className = 'mt-8 space-y-6';
+				document.querySelector('.flex.flex-col.gap-4').appendChild(socialSection);
+			}
+			
+			// Check if Twitter content section already exists
+			let twitterSection = document.querySelector('.bg-sky-50');
+			if (!twitterSection) {
+				// Create Twitter content section
+				twitterSection = document.createElement('div');
+				twitterSection.className = 'bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-800 rounded-lg p-4';
+				twitterSection.innerHTML = `
+					<div class='flex items-center justify-between mb-3'>
+						<h3 class='text-lg font-semibold text-sky-900 dark:text-sky-100 flex items-center gap-2'>
+							<svg class='w-5 h-5' fill='currentColor' viewBox='0 0 24 24'><path d='M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z'/></svg>
+							Twitter Thread
+						</h3>
+						<button type='button' onclick='regenerateTwitter()' class='text-sm text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-200'>Regenerate</button>
+					</div>
+					<div class='bg-white dark:bg-slate-900 rounded-md p-4 border border-sky-200 dark:border-sky-700'>
+						<div class='text-slate-800 dark:text-slate-200 whitespace-pre-wrap'>${content}</div>
+					</div>
+				`;
+				socialSection.appendChild(twitterSection);
+			} else {
+				// Update existing Twitter content
+				const contentDiv = twitterSection.querySelector('div.text-slate-800');
+				if (contentDiv) {
+					contentDiv.textContent = content;
+				}
+			}
+		}
+		
 		function render() {
 			// naive markdown preview for now; replace with server/client renderer later
 			const txt = mdIn.value;
@@ -181,7 +264,7 @@
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
 					credentials: 'same-origin',
-					body: JSON.stringify({ post_id: {{ post.id if post else 'null' }} })
+					body: JSON.stringify({ blog_id: {{ blog.id if blog else 'null' }} })
 				});
 				const data = await res.json();
 				outC.textContent = JSON.stringify(data, null, 2);
@@ -189,14 +272,104 @@
 				outC.textContent = 'Error calling AI service';
 			}
 		}
-		document.getElementById('aiLinkedIn').addEventListener('click', function(){ call('/api/ai/blog-to-linkedin'); });
-		document.getElementById('aiTwitter').addEventListener('click', function(){ call('/api/ai/blog-to-twitter-thread'); });
-		document.getElementById('aiSummary').addEventListener('click', function(){ call('/api/ai/summarize'); });
+		// AI buttons (only available when editing existing blog)
+		const aiLinkedInBtn = document.getElementById('aiLinkedIn');
+		const aiTwitterBtn = document.getElementById('aiTwitter');
+		const aiSummaryBtn = document.getElementById('aiSummary');
+		
+		if (aiLinkedInBtn) {
+			aiLinkedInBtn.addEventListener('click', async function() {
+				const button = this;
+				const originalText = button.textContent;
+				button.textContent = 'Generating...';
+				button.disabled = true;
+				
+				try {
+					const blogId = document.querySelector('form[data-blog-id]').getAttribute('data-blog-id');
+					const response = await fetch('/api/ai/blog-to-linkedin', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+						},
+						body: JSON.stringify({ blog_id: parseInt(blogId) })
+					});
+					
+					const data = await response.json();
+					if (data.linkedin_content) {
+						// Show success message and update the page content
+						alert('LinkedIn content generated successfully!');
+						
+						// Create or update the LinkedIn content section
+						updateLinkedInContent(data.linkedin_content);
+					} else {
+						alert('Failed to generate LinkedIn content');
+					}
+				} catch (error) {
+					console.error('Error generating LinkedIn content:', error);
+					alert('Error generating LinkedIn content');
+				} finally {
+					button.textContent = originalText;
+					button.disabled = false;
+				}
+			});
+		}
+		if (aiTwitterBtn) {
+			aiTwitterBtn.addEventListener('click', async function() {
+				const button = this;
+				const originalText = button.textContent;
+				button.textContent = 'Generating...';
+				button.disabled = true;
+				
+				try {
+					const blogId = document.querySelector('form[data-blog-id]').getAttribute('data-blog-id');
+					const response = await fetch('/api/ai/blog-to-twitter-thread', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+						},
+						body: JSON.stringify({ blog_id: parseInt(blogId) })
+					});
+					
+					const data = await response.json();
+					if (data.twitter_thread) {
+						// Show success message and update the page content
+						alert('Twitter thread generated successfully!');
+						
+						// Create or update the Twitter content section
+						updateTwitterContent(data.twitter_thread);
+					} else {
+						alert('Failed to generate Twitter thread');
+					}
+				} catch (error) {
+					console.error('Error generating Twitter thread:', error);
+					alert('Error generating Twitter thread');
+				} finally {
+					button.textContent = originalText;
+					button.disabled = false;
+				}
+			});
+		}
+		if (aiSummaryBtn) {
+			aiSummaryBtn.addEventListener('click', function(){ call('/api/ai/summarize'); });
+		}
 		
 		// Description functionality
+		console.log('Looking for description elements...');
 		const descInput = document.getElementById('descriptionInput');
 		const descWordCount = document.getElementById('descriptionWordCount');
 		const generateDescBtn = document.getElementById('generateDescription');
+		
+		console.log('Description input found:', descInput);
+		console.log('Description word count found:', descWordCount);
+		console.log('Generate description button found:', generateDescBtn);
+		
+		if (!generateDescBtn) {
+			console.error('Generate description button not found!');
+			alert('Generate description button not found!');
+			return;
+		}
 		
 		function updateDescriptionWordCount() {
 			const text = descInput.value;
@@ -209,8 +382,12 @@
 		updateDescriptionWordCount();
 		
 		generateDescBtn.addEventListener('click', async function() {
+			console.log('Generate description button clicked');
 			const title = document.querySelector('input[name="title"]').value;
 			const content = mdIn.value;
+			
+			console.log('Title:', title);
+			console.log('Content:', content);
 			
 			if (!title && !content) {
 				alert('Please add a title or content before generating description');
@@ -279,7 +456,7 @@
 		const continueEditingBtn = document.getElementById('continueEditingBtn');
 		
 		// Check if we're creating a new post (not editing existing)
-		const isNewPost = !document.querySelector('form[data-post-id]').getAttribute('data-post-id');
+		const isNewPost = !document.querySelector('form[data-blog-id]').getAttribute('data-blog-id');
 		
 		cancelButton.addEventListener('click', function() {
 			if (isNewPost) {
@@ -287,7 +464,7 @@
 				draftModal.classList.remove('hidden');
 			} else {
 				// For existing posts, just redirect
-				window.location.href = '{{ url_for('posts.list_posts') }}';
+				window.location.href = '{{ url_for('posts.list_blogs') }}';
 			}
 		});
 		
@@ -309,16 +486,17 @@
 						'Content-Type': 'application/json',
 						'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
 					},
-					body: JSON.stringify({
-						title: title,
-						description: description,
-						content: content
-					})
+				body: JSON.stringify({
+					blog_id: blogId,
+					title: title,
+					description: description,
+					content: content
+				})
 				});
 				
 				const data = await response.json();
 				if (data.success) {
-					window.location.href = '{{ url_for('posts.list_posts') }}';
+					window.location.href = '{{ url_for('posts.list_blogs') }}';
 				} else {
 					alert('Failed to save draft: ' + data.error);
 				}
@@ -330,7 +508,7 @@
 		
 		// Discard changes
 		discardChangesBtn.addEventListener('click', function() {
-			window.location.href = '{{ url_for('posts.list_posts') }}';
+			window.location.href = '{{ url_for('posts.list_blogs') }}';
 		});
 		
 		// Continue editing
@@ -339,73 +517,6 @@
 		});
 	});
 	
-	// LinkedIn generation
-	document.getElementById('aiLinkedIn')?.addEventListener('click', async function() {
-		const button = this;
-		const originalText = button.textContent;
-		button.textContent = 'Generating...';
-		button.disabled = true;
-		
-		try {
-			const postId = document.querySelector('form[data-post-id]').getAttribute('data-post-id');
-			const response = await fetch('/api/ai/blog-to-linkedin', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-				},
-				body: JSON.stringify({ post_id: parseInt(postId) })
-			});
-			
-			const data = await response.json();
-			if (data.linkedin_content) {
-				// Reload the page to show the generated content
-				window.location.reload();
-			} else {
-				alert('Error generating LinkedIn content');
-			}
-		} catch (error) {
-			console.error('Error generating LinkedIn content:', error);
-			alert('Error generating LinkedIn content');
-		} finally {
-			button.textContent = originalText;
-			button.disabled = false;
-		}
-	});
-	
-	// Twitter generation
-	document.getElementById('aiTwitter')?.addEventListener('click', async function() {
-		const button = this;
-		const originalText = button.textContent;
-		button.textContent = 'Generating...';
-		button.disabled = true;
-		
-		try {
-			const postId = document.querySelector('form[data-post-id]').getAttribute('data-post-id');
-			const response = await fetch('/api/ai/blog-to-twitter-thread', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-				},
-				body: JSON.stringify({ post_id: parseInt(postId) })
-			});
-			
-			const data = await response.json();
-			if (data.twitter_thread) {
-				// Reload the page to show the generated content
-				window.location.reload();
-			} else {
-				alert('Error generating Twitter thread');
-			}
-		} catch (error) {
-			console.error('Error generating Twitter thread:', error);
-			alert('Error generating Twitter thread');
-		} finally {
-			button.textContent = originalText;
-			button.disabled = false;
-		}
-	});
 	
 	// Regenerate functions
 	window.regenerateLinkedIn = async function() {
@@ -415,14 +526,14 @@
 		button.disabled = true;
 		
 		try {
-			const postId = document.querySelector('form[data-post-id]').getAttribute('data-post-id');
+			const blogId = document.querySelector('form[data-blog-id]').getAttribute('data-blog-id');
 			const response = await fetch('/api/ai/blog-to-linkedin', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 					'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
 				},
-				body: JSON.stringify({ post_id: parseInt(postId) })
+				body: JSON.stringify({ blog_id: parseInt(blogId) })
 			});
 			
 			const data = await response.json();
@@ -447,14 +558,14 @@
 		button.disabled = true;
 		
 		try {
-			const postId = document.querySelector('form[data-post-id]').getAttribute('data-post-id');
+			const blogId = document.querySelector('form[data-blog-id]').getAttribute('data-blog-id');
 			const response = await fetch('/api/ai/blog-to-twitter-thread', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 					'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
 				},
-				body: JSON.stringify({ post_id: parseInt(postId) })
+				body: JSON.stringify({ blog_id: parseInt(blogId) })
 			});
 			
 			const data = await response.json();

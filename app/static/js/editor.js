@@ -118,11 +118,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	// Auto-save functionality - only for editing existing posts
 	function autoSave() {
-		// Check if we're editing an existing post (URL contains /edit)
+		// Check if we're editing an existing blog (URL contains /edit)
 		const isEditing = window.location.pathname.includes('/edit');
 		
 		if (!isEditing) {
-			// Don't auto-save when creating new posts
+			// Don't auto-save when creating new blogs
 			saveStatus.textContent = 'Draft';
 			saveStatus.className = 'text-slate-500';
 			return;
@@ -136,12 +136,12 @@ document.addEventListener('DOMContentLoaded', function () {
 		// Auto-save every 15 seconds when editing
 		autoSaveTimeout = setTimeout(async () => {
 			try {
-				// Get post ID from form data attribute
-				const form = document.querySelector('form[data-post-id]');
-				const postId = form ? form.getAttribute('data-post-id') : null;
+				// Get blog ID from form data attribute
+				const form = document.querySelector('form[data-blog-id]');
+				const blogId = form ? form.getAttribute('data-blog-id') : null;
 				
-				if (!postId) {
-					console.error('Post ID not found');
+				if (!blogId) {
+					console.error('Blog ID not found');
 					saveStatus.textContent = 'Save failed';
 					saveStatus.className = 'text-red-600';
 					return;
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function () {
 						'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
 					},
 					body: JSON.stringify({
-						post_id: postId,
+						blog_id: blogId,
 						title: title,
 						description: description,
 						content: content
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
 				saveStatus.textContent = 'Save failed';
 				saveStatus.className = 'text-red-600';
 			}
-		}, 15000); // 15 seconds
+		}, 5000); // 15 seconds
 	}
 
 	// Live preview update

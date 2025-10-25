@@ -44,16 +44,16 @@
 				<h3 class='text-lg font-semibold text-slate-800 dark:text-white mb-4'>Blog Statistics</h3>
 				<div class='space-y-3'>
 					<div class='flex justify-between items-center'>
-						<span class='text-slate-600 dark:text-slate-400'>Total Posts</span>
-						<span class='text-2xl font-bold text-orange-500'>{{ stats.total_posts }}</span>
+						<span class='text-slate-600 dark:text-slate-400'>Total Blogs</span>
+						<span class='text-2xl font-bold text-orange-500'>{{ stats.total_blogs }}</span>
 					</div>
 					<div class='flex justify-between items-center'>
-						<span class='text-slate-600 dark:text-slate-400'>Published Posts</span>
-						<span class='text-2xl font-bold text-green-500'>{{ stats.published_posts }}</span>
+						<span class='text-slate-600 dark:text-slate-400'>Published Blogs</span>
+						<span class='text-2xl font-bold text-green-500'>{{ stats.published_blogs }}</span>
 					</div>
 					<div class='flex justify-between items-center'>
 						<span class='text-slate-600 dark:text-slate-400'>Drafts</span>
-						<span class='text-2xl font-bold text-yellow-500'>{{ stats.draft_posts }}</span>
+						<span class='text-2xl font-bold text-yellow-500'>{{ stats.draft_blogs }}</span>
 					</div>
 					<div class='flex justify-between items-center'>
 						<span class='text-slate-600 dark:text-slate-400'>Tags</span>
@@ -64,11 +64,11 @@
 		</div>
 
 		<div class='mt-8 flex gap-4'>
-			<a href='{{ url_for('posts.list_posts') }}' class='px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors'>
-				View My Posts
+			<a href='{{ url_for('posts.list_blogs') }}' class='px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors'>
+				View My Blogs
 			</a>
-			<a href='{{ url_for('posts.new_post') }}' class='px-6 py-3 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors'>
-				Create New Post
+			<a href='{{ url_for('posts.new_blog') }}' class='px-6 py-3 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors'>
+				Create New Blog
 			</a>
 		</div>
 	</div>
