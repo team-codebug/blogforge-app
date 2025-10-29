@@ -13,7 +13,7 @@ env:
   WTF_CSRF_ENABLED: False
   SECRET_KEY: test-secret-key-for-ci
   GEMINI_API_KEY: test-gemini-key
-  DATABASE_URL: sqlite:///:memory:
+  DATABASE_URL: "sqlite:///:memory:"
 
 jobs:
   test:
