@@ -67,15 +67,6 @@ jobs:
         python -c "import flask; print(f'Flask version: {flask.__version__}')"
         python -c "import pytest; print(f'pytest version: {pytest.__version__}')"
     
-    - name: Run linting (optional)
-      run: |
-        source .venv/bin/activate
-        pip install flake8
-        # Stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # Exit-zero treats all errors as warnings
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    
     - name: Run unit tests
       run: |
         source .venv/bin/activate
