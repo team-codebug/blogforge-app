@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, abort, jsonify
+from flask import render_template, request, redirect, url_for, abort, jsonify, flash
 from flask_login import login_required, current_user
 from . import bp
 from ..extensions import db
@@ -55,6 +55,13 @@ def create_blog():
 	description = request.form.get('description', '').strip()
 	content = request.form.get('content', '').strip()
 	if not title:
+		return redirect(url_for('posts.new_blog'))
+	
+	# Check for duplicate title for the same user
+	existing_blog = Blog.query.filter_by(user_id=current_user.id, title=title).first()
+	if existing_blog:
+		# Redirect back to new blog page with error message
+		flash('A blog with this title already exists. Please choose a different title.', 'error')
 		return redirect(url_for('posts.new_blog'))
 	
 	# Create blog as published by default
@@ -167,7 +174,45 @@ def delete_tag(tag_id: int):
 
 @bp.route('/render-markdown', methods=['GET'])
 def render_markdown():
-	"""Render markdown to HTML using markdown-it-py with proper configuration"""
+	"""Render markdown text to HTML using markdown-it-py with enhanced features.
+	
+	This endpoint converts markdown text to HTML using the markdown-it-py library
+	with CommonMark specification. It supports enhanced features like tables,
+	strikethrough text, line breaks, and HTML tags for rich content rendering.
+	
+	The function is commonly used for live preview functionality in blog editors
+	where users can see how their markdown content will appear when published.
+	
+	Args:
+		text (str, optional): The markdown text to be converted to HTML.
+			Retrieved from the 'text' query parameter. If not provided or empty,
+			returns an empty HTML string.
+	
+	Returns:
+		dict: A JSON response containing the rendered HTML.
+			- html (str): The converted HTML content from the markdown input.
+				Empty string if no text provided.
+	
+	Raises:
+		No exceptions are explicitly raised by this function. Any errors in
+		markdown parsing are handled gracefully by the markdown-it library.
+	
+	Example:
+		GET /render-markdown?text=# Hello World\n\nThis is **bold** text.
+		
+		Response:
+		{
+			"html": "<h1>Hello World</h1><p>This is <strong>bold</strong> text.</p>"
+		}
+	
+	Note:
+		The markdown renderer is configured with:
+		- CommonMark specification for standard compliance
+		- Line breaks enabled for better text formatting
+		- HTML tags allowed for rich content
+		- Table support for structured data
+		- Strikethrough support for text editing
+	"""
 	markdown_text = request.args.get('text', '')
 	if not markdown_text:
 		return jsonify({'html': ''})
@@ -179,7 +224,6 @@ def render_markdown():
 	md.enable(['table', 'strikethrough'])
 	
 	html = md.render(markdown_text)
-	print(f"Rendering markdown: '{markdown_text}' -> '{html}'")
 	return jsonify({'html': html})
 
 

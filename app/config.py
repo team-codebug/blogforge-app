@@ -24,12 +24,19 @@ class BaseConfig:
 
 	# AI Providers
 	AI_PROVIDER = os.getenv('AI_PROVIDER', 'openai')  # or 'gemini'
-	OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+	OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', 'AIzaSyAgC9qfvudROdDHwy6XQdSatSDK_Hdkqro')
 	GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 
 class DevelopmentConfig(BaseConfig):
 	DEBUG = True
+
+
+class TestingConfig(BaseConfig):
+	TESTING = True
+	WTF_CSRF_ENABLED = False
+	SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+	SECRET_KEY = 'test-secret-key'
 
 
 class ProductionConfig(BaseConfig):
@@ -41,6 +48,7 @@ def get_config(config_name: str | None):
 		config_name = os.getenv('FLASK_ENV', 'development')
 	mapping = {
 		'development': DevelopmentConfig,
+		'testing': TestingConfig,
 		'production': ProductionConfig,
 	}
 	return mapping.get(config_name, DevelopmentConfig)

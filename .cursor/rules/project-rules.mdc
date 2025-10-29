@@ -1,0 +1,4 @@
+---
+alwaysApply: true
+---
+Rule: Check for keys lying around in code and make sure that no keys are checked in inside code files.

@@ -25,9 +25,7 @@ def summarize():
 def blog_to_linkedin():
 	"""Convert blog post to LinkedIn post using Gemini AI"""
 	try:
-		print(f"LinkedIn request JSON: {request.json}")
 		blog_id = request.json.get('blog_id') if request.is_json else None
-		print(f"Blog ID received: {blog_id}")
 		if not blog_id:
 			return jsonify({'error': 'blog_id required'}), 400
 		
@@ -178,7 +176,6 @@ def generate_description():
 		
 		if not title and not content:
 			return jsonify({'error': 'Title or content required'}), 400
-		print(os.getenv('GEMINI_API_KEY'))
 
 		# Configure Gemini
 		client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
@@ -204,7 +201,6 @@ Generate only the description text, no additional formatting."""
 			contents=prompt
 		)
 		
-		print(response)
 
 		description = response.text.strip()
 		
