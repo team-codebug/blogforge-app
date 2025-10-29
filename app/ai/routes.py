@@ -23,7 +23,7 @@ def summarize():
 @limiter.limit('5/minute;100/day')
 @login_required
 def blog_to_linkedin():
-	"""Convert blog post to LinkedIn post using Gemini AI and return the LinkedIn content as a string"""
+	"""Convert blog post to LinkedIn post using Gemini AI and return the LinkedIn"""
 	try:
 		blog_id = request.json.get('blog_id') if request.is_json else None
 		if not blog_id:
