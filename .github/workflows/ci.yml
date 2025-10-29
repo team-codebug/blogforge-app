@@ -1,0 +1,256 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  FLASK_APP: wsgi.py
+  FLASK_ENV: testing
+  TESTING: True
+  WTF_CSRF_ENABLED: False
+  SECRET_KEY: test-secret-key-for-ci
+  GEMINI_API_KEY: test-gemini-key
+  DATABASE_URL: sqlite:///:memory:
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: [3.11, 3.12, 3.13]
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential
+    
+    - name: Create virtual environment
+      run: |
+        python -m venv .venv
+        echo "${{ github.workspace }}/.venv/bin" >> $GITHUB_PATH
+    
+    - name: Activate virtual environment
+      run: |
+        source .venv/bin/activate
+        python --version
+        pip --version
+    
+    - name: Upgrade pip and install wheel
+      run: |
+        source .venv/bin/activate
+        pip install --upgrade pip setuptools wheel
+    
+    - name: Install dependencies
+      run: |
+        source .venv/bin/activate
+        pip install -r requirements.txt
+    
+    - name: Verify installation
+      run: |
+        source .venv/bin/activate
+        pip list
+        python -c "import flask; print(f'Flask version: {flask.__version__}')"
+        python -c "import pytest; print(f'pytest version: {pytest.__version__}')"
+    
+    - name: Run linting (optional)
+      run: |
+        source .venv/bin/activate
+        pip install flake8
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Run unit tests
+      run: |
+        source .venv/bin/activate
+        python -m pytest tests/test_posts_routes.py -v --cov=app --cov-report=term-missing --cov-report=xml
+    
+    - name: Run integration tests
+      run: |
+        source .venv/bin/activate
+        python -m pytest tests/test_blog_workflow_integration.py -v --cov=app --cov-report=term-missing
+    
+    - name: Run all tests with coverage
+      run: |
+        source .venv/bin/activate
+        python -m pytest tests/ -v --cov=app --cov-report=term-missing --cov-report=html:htmlcov --cov-report=xml
+    
+    - name: Upload coverage reports to Codecov
+      if: matrix.python-version == '3.13'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+    
+    - name: Upload coverage HTML report
+      if: matrix.python-version == '3.13'
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: htmlcov/
+        retention-days: 30
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m venv .venv
+        source .venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install safety bandit
+    
+    - name: Run safety check
+      run: |
+        source .venv/bin/activate
+        safety check --json --output safety-report.json || true
+    
+    - name: Run bandit security scan
+      run: |
+        source .venv/bin/activate
+        bandit -r app/ -f json -o bandit-report.json || true
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          safety-report.json
+          bandit-report.json
+        retention-days: 30
+
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m venv .venv
+        source .venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Test application startup
+      run: |
+        source .venv/bin/activate
+        python -c "
+        from app import create_app
+        app = create_app('testing')
+        with app.app_context():
+            print('✅ Application created successfully')
+            print(f'✅ Database URI: {app.config[\"SQLALCHEMY_DATABASE_URI\"]}')
+            print(f'✅ Flask Environment: {app.config[\"FLASK_ENV\"]}')
+        "
+    
+    - name: Test database initialization
+      run: |
+        source .venv/bin/activate
+        export FLASK_APP=wsgi.py
+        export FLASK_ENV=testing
+        flask db init || echo "Database already initialized"
+        flask db migrate -m "CI migration" || echo "No changes to migrate"
+        flask db upgrade
+        echo "✅ Database operations completed successfully"
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [test, security, build]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Deploy to staging
+      run: |
+        echo "🚀 Deploying to staging environment..."
+        echo "This would typically involve:"
+        echo "- Building Docker image"
+        echo "- Pushing to container registry"
+        echo "- Deploying to staging server"
+        echo "- Running health checks"
+        echo "✅ Staging deployment completed (simulated)"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [test, security, build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Deploy to production
+      run: |
+        echo "🚀 Deploying to production environment..."
+        echo "This would typically involve:"
+        echo "- Building production Docker image"
+        echo "- Pushing to production registry"
+        echo "- Blue-green deployment"
+        echo "- Database migrations"
+        echo "- Health checks and rollback capability"
+        echo "✅ Production deployment completed (simulated)"
+
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [test, security, build]
+    if: always()
+    
+    steps:
+    - name: Notify success
+      if: needs.test.result == 'success' && needs.security.result == 'success' && needs.build.result == 'success'
+      run: |
+        echo "✅ All checks passed!"
+        echo "🎉 Ready for deployment"
+    
+    - name: Notify failure
+      if: needs.test.result == 'failure' || needs.security.result == 'failure' || needs.build.result == 'failure'
+      run: |
+        echo "❌ Some checks failed!"
+        echo "🔍 Please review the logs and fix the issues"
+        exit 1
