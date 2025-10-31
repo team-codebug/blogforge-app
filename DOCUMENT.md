@@ -1,4 +1,4 @@
-# BlogForge Documentation
+# BlogForge Documentation for Developers
 
 ## Table of Contents
 - [Project Overview](#project-overview)
